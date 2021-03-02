@@ -23,7 +23,6 @@ node* add(node* root, int key) {
     else {
         parent->right = tmp;
     }
-
     return root;
 }
 
@@ -61,11 +60,56 @@ node* del(node* root, int key) {
     return root;
 }
 
+node* read_from(node* root, string path) {
+    ifstream fin;
+    fin.open(path);
+
+    if (fin.is_open()) {
+        int new_element;
+
+        while (!fin.eof() && fin >> new_element) {
+
+            if (root == NULL) {
+                
+                root = create(root, new_element);
+            }
+            else {
+                root = add(root, new_element);
+            }
+        }
+
+        fin.close();    
+    }
+    else {
+        cout << "Ошибка чтения файла" << endl;
+    }
+
+    return root;
+}
+
+bool write_to(node* root, string path) {
+    ofstream fout;
+    fout.open(path);
+
+    if (fout.is_open()) {        
+        preorder(root, fout);
+        fout.close();
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 size_t size(node* root) {
     if (root == NULL) {
         return 0;
     }
     return size(root->right) + size(root->left) + 1;
+}
+
+bool empty(node* root) {
+    return (size(root) == 0);
 }
 
 node* min(node* root)
@@ -86,23 +130,23 @@ node* max(node* root)
     return r;
 }
 
-void preorder(node* root) {
+void preorder(node* root, ostream& out) {
     if (root == NULL) {
         return;
     }
 
-    std::cout << root->key << " ";
-    preorder(root->left);
-    preorder(root->right);
+    out << root->key << " ";
+    preorder(root->left, out);
+    preorder(root->right, out);
 }
 
-void postorder(node* root) {
+void postorder(node* root, ostream& out) {
     if (root == NULL) {
         return;
     }
-    postorder(root->left);
-    postorder(root->right);
-    std::cout << root->key << " ";
+    postorder(root->left, out);
+    postorder(root->right, out);
+    out << root->key << " ";
 }
 
 node* inserting_position_parent(node* root, int key) {
@@ -209,17 +253,9 @@ void del_with_one_child(node* deleting_node, bool has_left, bool has_right) {
 
 void del_with_two_child(node* deleting_node) {
     node* deleting_node_next = next_to(deleting_node);
-
-    deleting_node->key = deleting_node_next->key;
-    if (deleting_node_next->right == NULL) {
-        deleting_node_next->parent->left = NULL;
-    }
-    else {
-        deleting_node_next->parent->left = deleting_node_next->right;
-    }
-
-    free(deleting_node_next);
-
+    int new_key = deleting_node_next->key;
+    del(deleting_node_next, deleting_node_next->key);
+    deleting_node->key = new_key;
 }
 
 bool has_right_child(node* cur_node) {
